@@ -74,6 +74,7 @@ def install_hula_logic(mn_topo, switches, p4info_helper):
         switches[sw].WriteTableEntry(add_hula_handle_data_packet, debug)
 
 def install_tables(mn_topo, switches, p4info_helper):
+    
     # Install entries for hula_logic
     install_hula_logic(mn_topo, switches, p4info_helper)
     # Install rule to map each host to dst_tor
@@ -89,8 +90,10 @@ def install_tables(mn_topo, switches, p4info_helper):
         else:
             continue
         host_ip = mn_topo.nodeInfo(host)['ip'].split('/')[0]
+        host_mac= mn_topo.nodeInfo(host)['mac']
         dst_tor_num = int(switch[1:])
         port = mn_topo.port(switch, host)[0]
+        print(host_ip, dst_tor_num, port, host_mac)
 
         # Install entries for edge forwarding.
         add_edge_forward = p4info_helper.buildTableEntry(
@@ -118,8 +121,48 @@ def install_tables(mn_topo, switches, p4info_helper):
                     "self_id": self_id
                 })
             switches[sw].WriteTableEntry(add_host_dst_tor, debug)
+    
+    #ECMP Tables
+    for (x, y) in mn_topo.links():
+        switch1 = None
+        switch2= None
+        if x.startswith("s") and y.startswith("s"):
+            switch1 = x
+            switch2 = y
+        else:
+            continue
+        host_ip = mn_topo.nodeInfo(host)['ip'].split('/')[0]
+        host_mac= mn_topo.nodeInfo(host)['mac']
+        dst_tor_num = int(switch[1:])
+        port = mn_topo.port(switch, host)[0]
+        print(host_ip, dst_tor_num, port, host_mac)
 
+        # Install entries for edge forwarding.
+        add_edge_forward = p4info_helper.buildTableEntry(
+            table_name="MyIngress.edge_forward",
+            match_fields = {
+                "hdr.ipv4.dstAddr": host_ip
+            },
+            action_name="MyIngress.simple_forward",
+            action_params={
+                "port": port,
+            })
+        switches[switch].WriteTableEntry(add_edge_forward, debug)
 
+        for sw in mn_topo.switches():
+            self_id = int(sw[1:])
+            # Install entries to calculate get_dst_tor
+            add_host_dst_tor = p4info_helper.buildTableEntry(
+                table_name="MyIngress.get_dst_tor",
+                match_fields = {
+                    "hdr.ipv4.dstAddr": host_ip
+                },
+                action_name="MyIngress.set_dst_tor",
+                action_params={
+                    "dst_tor": dst_tor_num,
+                    "self_id": self_id
+                })
+            switches[sw].WriteTableEntry(add_host_dst_tor, debug)
 
 def main(p4info_file_path, bmv2_file_path, topo_file_path):
     # Instantiate a P4Runtime helper from the p4info file
