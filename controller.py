@@ -87,6 +87,10 @@ def install_tables(mn_topo, switches, p4info_helper):
             switch = x
             host = y
         else:
+            switch1 = x
+            switch2 = y
+            port1 = mn_topo.port(switch1, switch2)[0]
+            print(switch1, switch2, port1)
             continue
         host_ip = mn_topo.nodeInfo(host)['ip'].split('/')[0]
         host_mac= mn_topo.nodeInfo(host)['mac']
