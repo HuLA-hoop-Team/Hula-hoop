@@ -301,43 +301,44 @@ control MyIngress(inout headers hdr,
     /******************************************************/
 
     /********* Implement ECMP *****************************/
-    // action set_ecmp_select() {
-    //     hash(meta.ecmp_select,
-    //         HashAlgorithm.crc16,
-    //         0,
-    //         { hdr.ipv4.srcAddr,
-    //           hdr.ipv4.dstAddr,
-    //           hdr.ipv4.protocol,
-    //           hdr.tcp.srcPort,
-    //           hdr.tcp.dstPort },
-    //         4);
-    // }
-    // action set_nhop(bit<48> nhop_dmac, bit<32> nhop_ipv4, bit<9> port) {
-    //     hdr.ethernet.dstAddr = nhop_dmac;
-    //     hdr.ipv4.dstAddr = nhop_ipv4;
-    //     standard_metadata.egress_spec = port;
-    //     hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
-    // }
-    // table ecmp_group {
-    //     key = {
-    //         hdr.ipv4.dstAddr: lpm;
-    //     }
-    //     actions = {
-    //         drop;
-    //         set_ecmp_select;
-    //     }
-    //     size = 1024;
-    // }
-    // table ecmp_nhop {
-    //     key = {
-    //         meta.ecmp_select: exact;
-    //     }
-    //     actions = {
-    //         drop;
-    //         set_nhop;
-    //     }
-    //     size = 2;
-    // }
+    action set_ecmp_select(bit<32> ecmp_base, bit<32> ecmp_count) {
+        hash(meta.ecmp_select,
+            HashAlgorithm.crc16,
+            ecmp_base,
+            { hdr.ipv4.srcAddr,
+              hdr.ipv4.dstAddr,
+              hdr.ipv4.protocol,
+              hdr.tcp.srcPort,
+              hdr.tcp.dstPort },
+            ecmp_count);
+    }
+    action set_nhop(bit<48> nhop_dmac, bit<32> nhop_ipv4, bit<9> port) {
+        hdr.ethernet.dstAddr = nhop_dmac;
+        hdr.ipv4.dstAddr = nhop_ipv4;
+        standard_metadata.egress_spec = port;
+        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+    }
+    table ecmp_group {
+        key = {
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            drop;
+            set_ecmp_select;
+        }
+        size = 1024;
+    }
+    table ecmp_nhop {
+        key = {
+            meta.ecmp_select: exact;
+            hdr.ipv4.dstAddr: exact;
+        }
+        actions = {
+            drop;
+            set_nhop;
+        }
+        size = 32;
+    }
     /******************************************************/
 
     action update_ingress_statistics() {
@@ -369,7 +370,12 @@ control MyIngress(inout headers hdr,
           }
           if (meta.dst_tor == meta.self_id) {
               edge_forward.apply();
+          }else{
+             ecmp_group.apply();
+             ecmp_nhop.apply();
           }
+            // ecmp_group.apply();
+            // ecmp_nhop.apply();
         }
     }
 }

@@ -1,0 +1,45 @@
+s100: 
+1:h1
+2:h2
+3:s202
+4:s203
+
+s101: 
+1:h3
+2:h4
+3:s202
+4:s203
+
+s202: 
+1:s100
+2:s101
+
+s203: 
+1:s100
+2:s101
+
+Binding s100 to thrift port 9190
+Binding s101 to thrift port 9191
+Binding s202 to thrift port 9292
+Binding s203 to thrift port 9293
+s100 -> gRPC port: 50051
+s101 -> gRPC port: 50052
+s202 -> gRPC port: 50053
+s203 -> gRPC port: 50054
+**********
+h1
+default interface: h1-eth0      10.0.100.1      00:00:00:00:64:01
+**********
+**********
+h2
+default interface: h2-eth0      10.0.100.2      00:00:00:00:64:02                                                                                                                                                            
+**********                                                                                                                                                                                                                   
+**********                                                                                                                                                                                                                   
+h3                                                                                                                                                                                                                           
+default interface: h3-eth0      10.0.101.3      00:00:00:00:65:03                                                                                                                                                            
+**********                                                                                                                                                                                                                   
+**********                                                                                                                                                                                                                   
+h4                                                                                                                                                                                                                           
+default interface: h4-eth0      10.0.101.4      00:00:00:00:65:04                                                                                                                                                            
+**********                                                                                                                                                                                                                   
+Starting mininet CLI

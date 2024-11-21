@@ -29,7 +29,8 @@ def matchesMac(mac_addr_string):
     return mac_pattern.match(mac_addr_string) is not None
 
 def encodeMac(mac_addr_string):
-    return mac_addr_string.replace(':', '').decode('hex')
+    #return mac_addr_string.replace(':', '').decode('hex')
+    return bytes.fromhex(mac_addr_string.replace(':', ''))
 
 def decodeMac(encoded_mac_addr):
     return ':'.join(s.encode('hex') for s in encoded_mac_addr)
