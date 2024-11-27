@@ -107,22 +107,25 @@ parser MyParser(packet_in packet,
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
         transition select(hdr.ipv4.protocol) {
-          PROTO_HULA: parse_hula;
+        //   PROTO_HULA: parse_hula;
           PROTO_TCP: parse_tcp;
           default: accept;
         }
     }
 
+    state parse_tcp {
+        packet.extract(hdr.tcp);
+        // transition accept;
+        transition select(hdr.tcp.flags & 0x10) {
+        //   PROTO_HULA: parse_hula;
+          0x10: parse_hula;
+          default: accept;
+        }
+    }
     state parse_hula {
         packet.extract(hdr.hula);
         transition accept;
     }
-
-    state parse_tcp {
-        packet.extract(hdr.tcp);
-        transition accept;
-    }
-
 }
 
 /*************************************************************************
@@ -241,7 +244,7 @@ control MyIngress(inout headers hdr,
 
     table hula_logic {
         key = {
-          hdr.ipv4.protocol: exact;
+          hdr.ipv4.protocol: exact;//tcp/hula
         }
         actions = {
           hula_handle_probe;
@@ -341,6 +344,27 @@ control MyIngress(inout headers hdr,
     }
     /******************************************************/
 
+    /********* Implement ACK control *****************************/
+    // table control_ack {
+    //     key = {
+    //         hdr.tcp.flags: exact;
+    //     }
+    //     actions = {
+    //         modify_ack;
+    //         drop;
+    //         NoAction;
+    //     }
+    //     size = 1024;
+    //     default_action = NoAction();
+    // }
+    // action modify_ack() {//在这里执行探针的hula逻辑，一共两个字段,
+    //bit<24> dst_tor;//24->8，
+    //bit<8> path_util;  //ipv_4:diffserv
+        
+    // }
+    
+/******************************************************/
+
     action update_ingress_statistics() {
       util_t util;
       time_t last_update;
@@ -364,18 +388,20 @@ control MyIngress(inout headers hdr,
         get_dst_tor.apply();
         update_ingress_statistics();
         if (hdr.ipv4.isValid()) {
+        //   if (hdr.tcp.isValid() && hdr.tcp.flags & 0x10 == 0x10) { // 匹配 ACK 包
+        //     control_ack.apply();
+        // }
           hula_logic.apply();
           if (hdr.hula.isValid()) {
             standard_metadata.mcast_grp = (bit<16>)standard_metadata.ingress_port;
           }
+
           if (meta.dst_tor == meta.self_id) {
               edge_forward.apply();
           }else{
              ecmp_group.apply();
              ecmp_nhop.apply();
           }
-            // ecmp_group.apply();
-            // ecmp_nhop.apply();
         }
     }
 }

@@ -87,10 +87,6 @@ def install_tables(mn_topo, switches, p4info_helper):
             switch = x
             host = y
         else:
-            switch1 = x
-            switch2 = y
-            port1 = mn_topo.port(switch1, switch2)[0]
-            print(switch1, switch2, port1)
             continue
         host_ip = mn_topo.nodeInfo(host)['ip'].split('/')[0]
         host_mac= mn_topo.nodeInfo(host)['mac']
@@ -98,6 +94,7 @@ def install_tables(mn_topo, switches, p4info_helper):
         port = mn_topo.port(switch, host)[0]
         print(host_ip, dst_tor_num, port, host_mac)
         # Install entries for edge forwarding.
+        
         add_edge_forward = p4info_helper.buildTableEntry(
             table_name="MyIngress.edge_forward",
             match_fields = {
@@ -336,7 +333,10 @@ def install_tables(mn_topo, switches, p4info_helper):
                 "port": port
             })
         switches[sw].WriteTableEntry(add_ecmp_nhop, debug)
-    print("ecmp_nhop table install finish !!!!!!!!!!!!")        
+    print("ecmp_nhop table install finish !!!!!!!!!!!!")
+
+    #************************ack控制表如下
+    print("start install ack control table")
     
         
 
