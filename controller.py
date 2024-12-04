@@ -230,9 +230,6 @@ def install_tables(mn_topo, switches, p4info_helper):
             
         if host.startswith("h4"):
             port = 4
-<<<<<<< HEAD
-            select_value = 0
-=======
             select_value = 1
         if host.startswith("h3"):
             port = 3
@@ -240,7 +237,6 @@ def install_tables(mn_topo, switches, p4info_helper):
         if host.startswith("h4"):
             port = 4
             select_value = 1
->>>>>>> e1059116f23fe2b81bd8af65e193c23e863a6cdb
         
         host_ip = mn_topo.nodeInfo(host)['ip'].split('/')[0]
         host_mac= mn_topo.nodeInfo(host)['mac']
