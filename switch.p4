@@ -310,6 +310,7 @@ control MyIngress(inout headers hdr,
 
     /********* Implement ECMP *****************************/
     action set_ecmp_select(bit<32> ecmp_base, bit<32> ecmp_count) {
+<<<<<<< HEAD
         // hash(meta.ecmp_select,
         //     HashAlgorithm.crc16,
         //     ecmp_base,
@@ -320,6 +321,15 @@ control MyIngress(inout headers hdr,
         //       hdr.tcp.dstPort },
         //     ecmp_count);
         meta.ecmp_select = 0;
+=======
+        hash(meta.ecmp_select,
+            HashAlgorithm.crc16,
+            ecmp_base,
+            {  hdr.tcp.seq,
+               hdr.tcp.chksum,
+               hdr.ipv4.ttl},
+            ecmp_count);
+>>>>>>> e1059116f23fe2b81bd8af65e193c23e863a6cdb
     }
     action set_nhop(bit<48> nhop_dmac, bit<32> nhop_ipv4, bit<9> port) {
         hdr.ethernet.dstAddr = nhop_dmac;
