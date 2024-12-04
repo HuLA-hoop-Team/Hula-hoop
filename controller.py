@@ -57,7 +57,8 @@ def install_hula_logic(mn_topo, switches, p4info_helper):
         add_hula_handle_probe = p4info_helper.buildTableEntry(
             table_name="MyIngress.hula_logic",
             match_fields = {
-                "hdr.ipv4.protocol": 0x42
+                # "hdr.ipv4.protocol": 0x42
+                "hdr.ipv4.isAck": 1
             },
             action_name = "MyIngress.hula_handle_probe",
             action_params = {
@@ -65,7 +66,8 @@ def install_hula_logic(mn_topo, switches, p4info_helper):
         add_hula_handle_data_packet = p4info_helper.buildTableEntry(
             table_name="MyIngress.hula_logic",
             match_fields = {
-                "hdr.ipv4.protocol": 0x06
+                # "hdr.ipv4.protocol": 0x06
+                "hdr.ipv4.isAck": 0
             },
             action_name = "MyIngress.hula_handle_data_packet",
             action_params = {
@@ -220,6 +222,12 @@ def install_tables(mn_topo, switches, p4info_helper):
                     "port": port
                 })
             switches[sw].WriteTableEntry(add_ecmp_nhop, debug)
+            port = 4
+            select_value = 1
+        if host.startswith("h3"):
+            port = 3
+            select_value = 1
+        if host.startswith("h4"):
             port = 4
             select_value = 1
         

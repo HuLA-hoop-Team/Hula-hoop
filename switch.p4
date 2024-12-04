@@ -54,6 +54,7 @@ header ipv4_t {
     bit<16>   hdrChecksum;
     ip4Addr_t srcAddr;
     ip4Addr_t dstAddr;
+    bit<8> isAck;
 }
 
 header tcp_t {
@@ -106,6 +107,7 @@ parser MyParser(packet_in packet,
 
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
+        hdr.ipv4.isAck = 0;
         transition select(hdr.ipv4.protocol) {
         //   PROTO_HULA: parse_hula;
           PROTO_TCP: parse_tcp;
@@ -124,6 +126,7 @@ parser MyParser(packet_in packet,
     }
     state parse_hula {
         packet.extract(hdr.hula);
+        hdr.ipv4.isAck = 1;
         transition accept;
     }
 }
@@ -244,7 +247,8 @@ control MyIngress(inout headers hdr,
 
     table hula_logic {
         key = {
-          hdr.ipv4.protocol: exact;//tcp/hula
+        //   hdr.ipv4.protocol: exact;//tcp/hula
+        hdr.ipv4.isAck: exact;
         }
         actions = {
           hula_handle_probe;
@@ -308,11 +312,9 @@ control MyIngress(inout headers hdr,
         hash(meta.ecmp_select,
             HashAlgorithm.crc16,
             ecmp_base,
-            { hdr.ipv4.srcAddr,
-              hdr.ipv4.dstAddr,
-              hdr.ipv4.protocol,
-              hdr.tcp.srcPort,
-              hdr.tcp.dstPort },
+            {  hdr.tcp.seq,
+               hdr.tcp.chksum,
+               hdr.ipv4.ttl},
             ecmp_count);
     }
     action set_nhop(bit<48> nhop_dmac, bit<32> nhop_ipv4, bit<9> port) {

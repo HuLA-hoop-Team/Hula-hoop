@@ -22,9 +22,9 @@ def get_if():
         exit(1)
     return iface
 
-def create_packet(addr, iface, load):
+def create_packet(addr, iface, load, count):
     pkt =  Ether(src=get_if_hwaddr(iface), dst='ff:ff:ff:ff:ff:ff')
-    pkt = pkt /IP(dst=addr) / TCP(dport=1234, sport=58264) / load
+    pkt = pkt /IP(dst=addr) / TCP(dport=1234, sport=58264, seq=count) / load
     pkt.show2()
 
     return pkt
@@ -47,7 +47,7 @@ def main():
 
     # The check is intentially in place to allow for infinite loops
     while count != 0:
-        pkt = create_packet(addr, iface, sys.argv[2] + str(count))
+        pkt = create_packet(addr, iface, sys.argv[2] + str(count),count)
         sendp(pkt, iface=iface, verbose=False)
         count -= 1
         time.sleep(0.5)
