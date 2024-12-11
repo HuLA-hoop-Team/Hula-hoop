@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from queue import Queue
+from Queue import Queue
 from abc import abstractmethod
 from datetime import datetime
 
