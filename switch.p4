@@ -10,6 +10,7 @@ typedef bit<8> util_t;
 typedef bit<24> tor_id_t;
 typedef bit<48> time_t;
 
+
 /* Constants about the topology and switches. */
 const port_id_t NUM_PORTS = 255;
 const tor_id_t NUM_TORS = 512;
@@ -164,6 +165,7 @@ control MyIngress(inout headers hdr,
     // Keep track of the minimum utilized path
     register<util_t>((bit<32>) NUM_TORS) min_path_util;
 
+    register<bit<8>>(1) isBestHop;
     action drop() {
         mark_to_drop(standard_metadata);
     }
@@ -227,7 +229,7 @@ control MyIngress(inout headers hdr,
             hdr.ipv4.protocol,
             hdr.tcp.srcPort,
             hdr.tcp.dstPort
-        }, 32w1 << 10 - 1);
+        }, 4);
 
         flowlet_time.read(flow_t, flow_hash);
 
@@ -236,6 +238,10 @@ control MyIngress(inout headers hdr,
         port_id_t tmp;
         flowlet_hop.read(tmp, flow_hash);
         tmp = (curr_time - flow_t > FLOWLET_TOUT) ? best_h : tmp;
+        isBestHop.write(0,0);
+        if(curr_time - flow_t > FLOWLET_TOUT){
+            isBestHop.write(0,1);
+        }
         flowlet_hop.write(flow_hash, tmp);
         /*}*/
 
@@ -319,7 +325,10 @@ control MyIngress(inout headers hdr,
     action set_nhop(bit<48> nhop_dmac, bit<32> nhop_ipv4, bit<9> port) {
         hdr.ethernet.dstAddr = nhop_dmac;
         hdr.ipv4.dstAddr = nhop_ipv4;
-        standard_metadata.egress_spec = port;
+        bit<8> flag = isBestHop.read(0);
+        if(flag==0){
+            standard_metadata.egress_spec = port;
+        }
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
     table ecmp_group {
