@@ -75,6 +75,7 @@ struct metadata {
     bit<32> self_id;
     bit<32> dst_tor;
     bit<32> ecmp_select;
+    bit<32> random_value;
 }
 
 struct headers {
@@ -117,11 +118,9 @@ parser MyParser(packet_in packet,
 
     state parse_tcp {
         packet.extract(hdr.tcp);
-        // transition accept;
-        transition select(hdr.tcp.flags & 0x10) {
-        //   PROTO_HULA: parse_hula;
-          0x10: parse_hula;
-          default: accept;
+        transition select(hdr.tcp.ack != 0) {
+            true: parse_hula;
+            false: accept;
         }
     }
     state parse_hula {

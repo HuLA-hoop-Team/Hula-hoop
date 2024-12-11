@@ -204,24 +204,31 @@ def install_tables(mn_topo, switches, p4info_helper):
         if host.startswith("h2"):
             port = 2
             select_value = 0
-        if host.startswith("h3") or host.startswith("h4"):
+        # if host.startswith("h3") or host.startswith("h4"):
+        #     port = 3
+        #     select_value = 0
+        #     host_ip = mn_topo.nodeInfo(host)['ip'].split('/')[0]
+        #     host_mac= mn_topo.nodeInfo(host)['mac']
+        #     add_ecmp_nhop = p4info_helper.buildTableEntry(
+        #         table_name="MyIngress.ecmp_nhop",
+        #         match_fields = {
+        #             "meta.ecmp_select": select_value,
+        #             "hdr.ipv4.dstAddr": host_ip
+        #         },
+        #         action_name="MyIngress.set_nhop",
+        #         action_params={
+        #             "nhop_dmac": host_mac,
+        #             "nhop_ipv4": host_ip,
+        #             "port": port
+        #         })
+        #     switches[sw].WriteTableEntry(add_ecmp_nhop, debug)
+        #     port = 4
+        #     select_value = 1
+        if host.startswith("h3"):
             port = 3
             select_value = 0
-            host_ip = mn_topo.nodeInfo(host)['ip'].split('/')[0]
-            host_mac= mn_topo.nodeInfo(host)['mac']
-            add_ecmp_nhop = p4info_helper.buildTableEntry(
-                table_name="MyIngress.ecmp_nhop",
-                match_fields = {
-                    "meta.ecmp_select": select_value,
-                    "hdr.ipv4.dstAddr": host_ip
-                },
-                action_name="MyIngress.set_nhop",
-                action_params={
-                    "nhop_dmac": host_mac,
-                    "nhop_ipv4": host_ip,
-                    "port": port
-                })
-            switches[sw].WriteTableEntry(add_ecmp_nhop, debug)
+            
+        if host.startswith("h4"):
             port = 4
             select_value = 1
         if host.startswith("h3"):
